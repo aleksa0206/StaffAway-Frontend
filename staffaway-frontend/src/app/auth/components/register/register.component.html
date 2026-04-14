@@ -1,0 +1,104 @@
+<div class="auth-container">
+  <div class="auth-wrap">
+    <!-- Left Panel -->
+    <div class="auth-panel-left">
+      <div class="brand-mark">
+        <div class="brand-icon">S</div>
+        <div class="brand-name">StaffAway</div>
+      </div>
+
+      <div class="auth-hero">
+        <h2>Započnite sa StaffAway danas</h2>
+        <p>
+          Kreirajte nalog i pridružite se hiljadama kompanija koje već koriste StaffAway
+          za upravljanje odsustvima.
+        </p>
+      </div>
+
+      <div class="auth-stats">
+        <div class="auth-stat">
+          <div class="num">99%</div>
+          <div class="lbl">Zadovoljstvo</div>
+        </div>
+        <div class="auth-stat">
+          <div class="num">2.4k+</div>
+          <div class="lbl">Kompanija</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Panel -->
+    <div class="auth-panel-right">
+      <h1>Kreirajte nalog</h1>
+      <p class="sub">
+        Već imate nalog?
+        <a routerLink="/login">Prijavite se ovde</a>
+      </p>
+
+      <div class="error" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+
+      <div class="success" *ngIf="successMessage">
+        {{ successMessage }}
+      </div>
+
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+        <div class="form-group">
+          <label for="name">Ime i prezime (opciono)</label>
+          <input
+            id="name"
+            type="text"
+            formControlName="name"
+            placeholder="Marko Petrović"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email adresa</label>
+          <input
+            id="email"
+            type="email"
+            formControlName="email"
+            placeholder="vas.email@primer.com"
+          />
+          <small class="error-text" *ngIf="email?.invalid && email?.touched">
+            <span *ngIf="email?.errors?.['required']">Email je obavezan</span>
+            <span *ngIf="email?.errors?.['email']">Unesite validan email</span>
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Lozinka</label>
+          <input
+            id="password"
+            type="password"
+            formControlName="password"
+            placeholder="••••••••"
+          />
+          <small class="error-text" *ngIf="password?.invalid && password?.touched">
+            <span *ngIf="password?.errors?.['required']">Lozinka je obavezna</span>
+            <span *ngIf="password?.errors?.['minlength']">Lozinka mora imati minimum 6 karaktera</span>
+          </small>
+        </div>
+
+        <button 
+          type="submit" 
+          class="btn-primary" 
+          [disabled]="registerForm.invalid || isLoading"
+        >
+          {{ isLoading ? 'Kreiranje naloga...' : 'Kreiraj nalog' }}
+        </button>
+
+        <div class="text-center mt-3">
+          <p class="sub" style="margin-bottom: 0; font-size: 11px;">
+            Registracijom prihvatate naše
+            <a style="cursor: pointer;">Uslove korišćenja</a>
+            i
+            <a style="cursor: pointer;">Politiku privatnosti</a>
+          </p>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
