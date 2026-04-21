@@ -2,27 +2,28 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { Router } from '@angular/router';
+import { environment } from '../../../../environments/environment.development';
 import {
   User,
   LoginRequest,
   RegisterRequest,
   LoginResponse,
-  MeResponse
-} from '../../core/models/auth.models';
+  MeResponse,
+} from '../../../core/models/auth.models';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthService {
-  private readonly API_URL = 'http://localhost:3000/api/auth';
+  private readonly API_URL = `${environment.apiUrl}/auth`;
   private readonly TOKEN_KEY = 'auth_token';
-  
+
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 
   constructor(
     private http: HttpClient,
-    private router: Router
+    private router: Router,
   ) {
     // Check if token exists on service init
     const token = this.getToken();
@@ -35,37 +36,34 @@ export class AuthService {
    * Register new user
    */
   register(data: RegisterRequest): Observable<MeResponse> {
-    return this.http.post<MeResponse>(`${this.API_URL}/register`, data)
-      .pipe(
-        tap(response => {
-          console.log('Registration successful:', response);
-        })
-      );
+    return this.http.post<MeResponse>(`${this.API_URL}/register`, data).pipe(
+      tap((response) => {
+        console.log('Registration successful:', response);
+      }),
+    );
   }
 
   /**
    * Login user
    */
   login(data: LoginRequest): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${this.API_URL}/login`, data)
-      .pipe(
-        tap(response => {
-          this.setToken(response.token);
-          this.loadCurrentUser();
-        })
-      );
+    return this.http.post<LoginResponse>(`${this.API_URL}/login`, data).pipe(
+      tap((response) => {
+        this.setToken(response.token);
+        this.loadCurrentUser();
+      }),
+    );
   }
 
   /**
    * Get current user data
    */
   me(): Observable<MeResponse> {
-    return this.http.get<MeResponse>(`${this.API_URL}/me`)
-      .pipe(
-        tap(user => {
-          this.currentUserSubject.next(user);
-        })
-      );
+    return this.http.get<MeResponse>(`${this.API_URL}/me`).pipe(
+      tap((user) => {
+        this.currentUserSubject.next(user);
+      }),
+    );
   }
 
   /**
@@ -79,7 +77,7 @@ export class AuthService {
       error: (err) => {
         console.error('Failed to load user:', err);
         this.logout();
-      }
+      },
     });
   }
 
