@@ -5,16 +5,15 @@ import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
-  selector: 'app-register',
+  selector: 'app-login',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterModule],
-  templateUrl: './register.component.html',
-  styleUrls: ['./register.component.css']
+  templateUrl: './login.component.html',
+  styleUrls: ['./login.component.scss']
 })
-export class RegisterComponent {
-  registerForm: FormGroup;
+export class LoginComponent {
+  loginForm: FormGroup;
   errorMessage: string = '';
-  successMessage: string = '';
   isLoading: boolean = false;
 
   constructor(
@@ -22,44 +21,40 @@ export class RegisterComponent {
     private authService: AuthService,
     private router: Router
   ) {
-    this.registerForm = this.fb.group({
+    this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
-      name: [''],
       password: ['', [Validators.required, Validators.minLength(6)]]
     });
   }
 
   onSubmit(): void {
-    if (this.registerForm.invalid) {
+    if (this.loginForm.invalid) {
       return;
     }
 
     this.isLoading = true;
     this.errorMessage = '';
-    this.successMessage = '';
 
-    this.authService.register(this.registerForm.value).subscribe({
-      next: (response) => {
-        console.log('Registration successful:', response);
-        this.successMessage = 'Registration successful! Redirecting to login...';
-        
-        setTimeout(() => {
-          this.router.navigate(['/login']);
-        }, 2000);
+    this.authService.login(this.loginForm.value).subscribe({
+      next: () => {
+        this.router.navigate(['/dashboard']);
       },
       error: (error) => {
-        console.error('Registration error:', error);
-        this.errorMessage = error.error?.message || 'Registration failed. Please try again.';
+        console.error('Login error:', error);
+        this.errorMessage = error.error?.message || 'Login failed. Please try again.';
+        this.isLoading = false;
+      },
+      complete: () => {
         this.isLoading = false;
       }
     });
   }
 
   get email() {
-    return this.registerForm.get('email');
+    return this.loginForm.get('email');
   }
 
   get password() {
-    return this.registerForm.get('password');
+    return this.loginForm.get('password');
   }
 }
