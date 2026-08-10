@@ -1,0 +1,108 @@
+// Single source of design values. SCSS maps are turned into CSS custom properties so
+// components (and a future dark theme) use the same tokens at runtime.
+
+$colors: (
+  'bg': #f4f5f8,
+  'surface': #ffffff,
+  'surface-subtle': #f7f8fa,
+  'surface-hover': #f0f2f6,
+  'border': #e2e5eb,
+  'border-strong': #cbd0d8,
+  'text': #171b24,
+  'text-secondary': #545d6c,
+  'text-tertiary': #7b8493,
+  'text-inverse': #ffffff,
+
+  'accent': #3654d1,
+  'accent-hover': #2a45b3,
+  'accent-subtle': #eef1fd,
+  'accent-text': #2c47b8,
+
+  // Navigation: a deep navy panel gives the product a recognizable frame without decoration.
+  'nav-bg': #151d33,
+  'nav-bg-hover': #1f2945,
+  'nav-bg-active': #26325a,
+  'nav-text': #b7c0d6,
+  'nav-text-strong': #ffffff,
+  'nav-muted': #7885a3,
+  'nav-border': #232d48,
+
+  'success': #1b7a4a,
+  'success-subtle': #e7f5ee,
+  'warning': #9a5f00,
+  'warning-subtle': #fdf3e0,
+  'danger': #c0342b,
+  'danger-hover': #a32a22,
+  'danger-subtle': #fcebea,
+  'info': #2a67a8,
+  'info-subtle': #e9f2fb,
+
+  'focus-ring': rgba(54, 84, 209, 0.35),
+  'overlay': rgba(15, 20, 32, 0.45),
+);
+
+// Leave type colours: assigned by type, always shown together with the type's name.
+$leave-colors: (#3a86d9, #16a085, #8a5cd6, #e08a1e, #d9486b, #4f9a3a, #6b7a90, #d1672c);
+
+$space: (
+  '1': 4px,
+  '2': 8px,
+  '3': 12px,
+  '4': 16px,
+  '5': 20px,
+  '6': 24px,
+  '8': 32px,
+  '10': 40px,
+  '12': 48px,
+);
+
+$font-size: (
+  'meta': 12px,
+  'secondary': 13px,
+  'body': 14px,
+  'section': 15px,
+  'title': 22px,
+  'stat': 26px,
+);
+
+:root {
+  @each $name, $value in $colors {
+    --color-#{$name}: #{$value};
+  }
+  @for $i from 1 through length($leave-colors) {
+    --leave-#{$i}: #{nth($leave-colors, $i)};
+  }
+  @each $name, $value in $space {
+    --space-#{$name}: #{$value};
+  }
+  @each $name, $value in $font-size {
+    --font-size-#{$name}: #{$value};
+  }
+
+  --font-family:
+    Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-family-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, monospace;
+  --line-height: 1.5;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --radius-sm: 5px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+
+  --control-height: 34px;
+  --control-height-sm: 28px;
+  --table-row-height: 44px;
+  --icon-size: 16px;
+
+  --shell-sidebar-width: 240px;
+  --shell-topbar-height: 56px;
+  --content-max-width: 1240px;
+  --form-max-width: 600px;
+
+  --shadow-panel: 0 1px 2px rgba(15, 20, 32, 0.04);
+  --shadow-overlay: 0 10px 28px rgba(15, 20, 32, 0.14), 0 2px 6px rgba(15, 20, 32, 0.08);
+  --transition-fast: 120ms ease;
+}
