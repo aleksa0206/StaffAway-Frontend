@@ -1,0 +1,144 @@
+<a class="skip-link" href="#main">Skip to content</a>
+
+<div class="shell" [class.shell--nav-open]="navOpen()">
+  <aside class="sidebar" id="app-sidebar">
+    <a class="brand" routerLink="/" aria-label="StaffAway home">
+      <span class="brand__mark" aria-hidden="true">S</span>
+      <span class="brand__text">
+        <span class="brand__name">StaffAway</span>
+        @if (company.value(); as c) {
+          <span class="brand__company">{{ c.name }}</span>
+        }
+      </span>
+    </a>
+
+    <nav class="sidebar__nav" aria-label="Main navigation">
+      @for (section of sections(); track section.label) {
+        @if (section.label) {
+          <p class="sidebar__section">{{ section.label }}</p>
+        }
+        <ul>
+          @for (item of section.items; track item.path) {
+            <li>
+              <a
+                class="sidebar__link"
+                [routerLink]="item.path"
+                routerLinkActive="is-active"
+                [routerLinkActiveOptions]="{ exact: !!item.exact }"
+                ariaCurrentWhenActive="page"
+              >
+                <app-icon [name]="item.icon" [size]="17" />
+                <span class="sidebar__label">{{ item.label }}</span>
+                @if (badgeCount(item.badge); as count) {
+                  <span class="sidebar__badge" [attr.aria-label]="count + ' waiting'">{{
+                    count > 99 ? '99+' : count
+                  }}</span>
+                }
+              </a>
+            </li>
+          }
+        </ul>
+      }
+    </nav>
+
+    @if (auth.user(); as user) {
+      <div class="sidebar__user">
+        <app-avatar [person]="user" [size]="30" />
+        <span class="sidebar__user-text">
+          <span class="sidebar__user-name">{{ user | fullName }}</span>
+          <span class="sidebar__user-role">{{ user.role }}</span>
+        </span>
+      </div>
+    }
+  </aside>
+
+  @if (navOpen()) {
+    <button
+      type="button"
+      class="shell__backdrop"
+      aria-label="Close navigation"
+      (click)="navOpen.set(false)"
+    ></button>
+  }
+
+  <div class="shell__main">
+    <header class="topbar">
+      <button
+        type="button"
+        class="btn btn--ghost btn--icon topbar__menu"
+        aria-controls="app-sidebar"
+        [attr.aria-expanded]="navOpen()"
+        aria-label="Navigation"
+        (click)="navOpen.set(!navOpen())"
+      >
+        <app-icon name="menu" />
+      </button>
+
+      <div class="topbar__spacer"></div>
+
+      <a class="btn btn--primary topbar__request" routerLink="/requests/new">
+        <app-icon name="plus" />
+        <span class="topbar__request-label">Request leave</span>
+      </a>
+
+      <a
+        class="btn btn--ghost btn--icon topbar__bell"
+        routerLink="/notifications"
+        [attr.aria-label]="
+          unread.count() ? 'Notifications, ' + unread.count() + ' unread' : 'Notifications'
+        "
+      >
+        <app-icon name="bell" [size]="18" />
+        @if (unread.count()) {
+          <span class="topbar__count" aria-hidden="true">{{
+            unread.count() > 99 ? '99+' : unread.count()
+          }}</span>
+        }
+      </a>
+
+      @if (auth.user(); as user) {
+        <button
+          type="button"
+          class="btn btn--ghost topbar__user"
+          [cdkMenuTriggerFor]="userMenu"
+          aria-label="Account menu"
+        >
+          <app-avatar [person]="user" [size]="28" />
+          <app-icon name="chevronDown" [size]="14" />
+        </button>
+
+        <ng-template #userMenu>
+          <div class="menu" cdkMenu>
+            <div class="topbar__menu-header">
+              <strong>{{ user | fullName }}</strong>
+              <span class="text-meta">{{ user.email }}</span>
+            </div>
+            <div class="menu__separator"></div>
+            <a class="menu__item" cdkMenuItem routerLink="/account">
+              <app-icon name="user" />
+              My account
+            </a>
+            <a class="menu__item" cdkMenuItem routerLink="/notifications">
+              <app-icon name="bell" />
+              Notifications
+            </a>
+            <div class="menu__separator"></div>
+            <button
+              type="button"
+              class="menu__item"
+              cdkMenuItem
+              (cdkMenuItemTriggered)="auth.logout()"
+            >
+              <app-icon name="logout" />
+              Sign out
+            </button>
+          </div>
+        </ng-template>
+      }
+    </header>
+
+    <main id="main" class="shell__content" tabindex="-1">
+      <router-outlet />
+    </main>
+  </div>
+</div>
