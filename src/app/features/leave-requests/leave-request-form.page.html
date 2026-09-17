@@ -1,0 +1,189 @@
+<div class="page">
+  <app-page-header
+    [title]="isEdit() ? 'Edit request' : 'Request leave'"
+    [backLink]="isEdit() ? '/requests/' + id() : '/leave'"
+    [backLabel]="isEdit() ? 'Request' : 'My leave'"
+  />
+
+  @if (existing.error(); as error) {
+    <app-load-error [error]="error" (retry)="existing.reload()" />
+  } @else if (leaveTypes.error(); as error) {
+    <app-load-error [error]="error" (retry)="leaveTypes.reload()" />
+  } @else if (readOnlyReason(); as reason) {
+    <p class="form-error" role="alert">{{ reason }}</p>
+  } @else if (!isEdit() && leaveTypes.hasValue() && leaveTypes.value().length === 0) {
+    <p class="form-error" role="alert">
+      The company has no leave types yet, so a request can't be submitted. Contact Hr.
+    </p>
+  } @else {
+    <form class="request-layout" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <section class="panel" aria-labelledby="details-title">
+        <header class="panel__header">
+          <h2 class="panel__title" id="details-title">Details</h2>
+        </header>
+        <div class="panel__body form request-form">
+          @if (formError(); as message) {
+            <p class="form-error" role="alert">{{ message }}</p>
+          }
+
+          <app-field label="Leave type">
+            <select class="select" appFieldControl formControlName="leaveTypeId">
+              <option [ngValue]="0" disabled>
+                {{ leaveTypes.isLoading() ? 'Loading…' : 'Select a type' }}
+              </option>
+              @for (type of leaveTypes.value(); track type.id) {
+                <option [ngValue]="type.id">{{ type.name }}</option>
+              }
+            </select>
+          </app-field>
+
+          <div class="form__row">
+            <app-field
+              label="First day"
+              [hint]="'At least ' + minNoticeDays() + ' day(s) in advance.'"
+            >
+              <input class="input" appFieldControl type="date" formControlName="startDate" />
+            </app-field>
+            <app-field label="Last day">
+              <input class="input" appFieldControl type="date" formControlName="endDate" />
+            </app-field>
+          </div>
+
+          <app-field label="Note" [optional]="true" hint="Visible to you, your manager and Hr.">
+            <textarea
+              class="textarea"
+              appFieldControl
+              formControlName="comment"
+              maxlength="1000"
+            ></textarea>
+          </app-field>
+        </div>
+      </section>
+
+      <!-- Live summary: what the request means before it is sent. -->
+      <aside class="panel summary" aria-labelledby="summary-title">
+        <header class="panel__header">
+          <h2 class="panel__title" id="summary-title">Summary</h2>
+        </header>
+        <div class="panel__body summary__body" aria-live="polite">
+          <dl class="summary__facts">
+            <div>
+              <dt>Leave type</dt>
+              <dd>
+                @if (selectedType(); as type) {
+                  <app-leave-type [type]="type" />
+                } @else {
+                  <span class="text-secondary">Not selected</span>
+                }
+              </dd>
+            </div>
+            <div>
+              <dt>Working days</dt>
+              <dd class="summary__days">{{ workingDays() ?? '—' }}</dd>
+            </div>
+            <div>
+              <dt>Approval</dt>
+              <dd>
+                @if (!selectedType()) {
+                  —
+                } @else if (!selectedType()!.requiresApproval) {
+                  Approved automatically
+                } @else if (approverName()) {
+                  {{ approverName() }}
+                } @else {
+                  Your manager or Hr
+                }
+              </dd>
+            </div>
+          </dl>
+
+          @if (balance(); as b) {
+            @if (b.missing) {
+              <p class="alert alert--warning">
+                <app-icon name="warning" />
+                <span
+                  >You have no {{ selectedType()!.name }} balance for this year yet. Ask Hr to add
+                  it before submitting.</span
+                >
+              </p>
+            } @else {
+              <div class="summary__balance">
+                <div>
+                  <span class="text-meta">Available now</span>
+                  <strong>{{ b.available }}</strong>
+                </div>
+                <app-icon name="arrowRight" class="text-meta" />
+                <div>
+                  <span class="text-meta">After this request</span>
+                  <strong [class.negative]="b.after < 0">{{ b.after }}</strong>
+                </div>
+              </div>
+              @if (b.pending) {
+                <p class="text-meta">
+                  {{ b.pending }} day(s) in other pending requests are already deducted.
+                </p>
+              }
+              @if (b.after < 0) {
+                <p class="alert alert--danger">
+                  <app-icon name="alert" />
+                  <span>This exceeds your remaining balance by {{ -b.after }} day(s).</span>
+                </p>
+              }
+            }
+          }
+
+          @for (conflict of ownConflicts(); track conflict.id) {
+            <p class="alert alert--danger">
+              <app-icon name="alert" />
+              <span>
+                Overlaps your {{ conflict.status === 'Pending' ? 'pending' : 'approved' }}
+                {{ conflict.leaveType.name }} ({{
+                  conflict.startDate | dateRange: conflict.endDate
+                }}). The request will be rejected.
+              </span>
+            </p>
+          }
+
+          @if (teamAway().length) {
+            <div class="alert alert--info summary__team">
+              <app-icon name="users" />
+              <div>
+                <p>
+                  <strong
+                    >{{ teamAway().length }}
+                    {{ teamAway().length === 1 ? 'person' : 'people' }}</strong
+                  >
+                  from your team {{ teamAway().length === 1 ? 'is' : 'are' }} away during this
+                  period:
+                </p>
+                <ul>
+                  @for (r of teamAway(); track r.id) {
+                    <li>
+                      <app-avatar [person]="r.user" [size]="20" />
+                      {{ r.user | fullName }}
+                      <span class="text-meta">{{ r.startDate | dateRange: r.endDate }}</span>
+                    </li>
+                  }
+                </ul>
+              </div>
+            </div>
+          }
+        </div>
+        <footer class="panel__footer summary__actions">
+          <button type="button" class="btn" (click)="cancel()">Cancel</button>
+          <button
+            type="submit"
+            class="btn btn--primary"
+            [disabled]="submitting()"
+            [attr.aria-busy]="submitting()"
+          >
+            @if (submitting()) {
+              <span class="spinner" aria-hidden="true"></span>
+            }
+            {{ isEdit() ? 'Save changes' : 'Submit request' }}
+          </button>
+        </footer>
+      </aside>
+    </form>
+  }
+</div>
