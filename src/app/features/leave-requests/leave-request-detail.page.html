@@ -1,0 +1,106 @@
+<div class="page">
+  @if (request.error(); as error) {
+    <app-page-header title="Leave request" backLink="/leave" backLabel="My leave" />
+    <app-load-error [error]="error" (retry)="request.reload()" />
+  } @else if (request.value(); as r) {
+    <app-page-header
+      [title]="r.leaveType.name + ' · ' + (r.user | fullName)"
+      [backLink]="back().link"
+      [backLabel]="back().label"
+    >
+      @if (permissions().modify) {
+        <a class="btn" routerLink="edit">
+          <app-icon name="pencil" />
+          Edit
+        </a>
+      }
+      @if (permissions().cancel) {
+        <button type="button" class="btn" [disabled]="busy()" (click)="cancelRequest(r)">
+          Cancel leave
+        </button>
+      }
+      @if (permissions().decide) {
+        @if (r.status === 'Pending') {
+          <button type="button" class="btn" [disabled]="busy()" (click)="reject(r)">Reject</button>
+          <button type="button" class="btn btn--primary" [disabled]="busy()" (click)="approve(r)">
+            <app-icon name="check" />
+            Approve
+          </button>
+        } @else if (r.status === 'Approval') {
+          <button type="button" class="btn" [disabled]="busy()" (click)="reject(r)">
+            Revoke approval
+          </button>
+        }
+      }
+    </app-page-header>
+
+    <div class="layout-split">
+      <div class="stack">
+        <section class="panel" aria-labelledby="request-title">
+          <header class="panel__header">
+            <div class="requester">
+              <app-avatar [person]="r.user" [size]="36" />
+              <div>
+                <h2 class="panel__title" id="request-title">{{ r.user | fullName }}</h2>
+                <span class="text-meta">Submitted {{ r.createdAt | timestamp }}</span>
+              </div>
+            </div>
+            <app-status-badge [status]="r.status" />
+          </header>
+
+          <dl class="facts">
+            <div>
+              <dt>Leave type</dt>
+              <dd><app-leave-type [type]="r.leaveType" /></dd>
+            </div>
+            <div>
+              <dt>First day</dt>
+              <dd>{{ r.startDate | calendarDate }}</dd>
+            </div>
+            <div>
+              <dt>Last day</dt>
+              <dd>{{ r.endDate | calendarDate }}</dd>
+            </div>
+            <div>
+              <dt>Working days</dt>
+              <dd>{{ r.totalDays }}</dd>
+            </div>
+          </dl>
+
+          <div class="panel__body request-body">
+            <div>
+              <h3 class="label">Note</h3>
+              @if (r.comment) {
+                <p class="note">{{ r.comment }}</p>
+              } @else {
+                <p class="text-secondary">No note.</p>
+              }
+            </div>
+            @if (r.approvedBy && (r.status === 'Approval' || r.status === 'Rejected')) {
+              <p class="decided">
+                <app-icon [name]="r.status === 'Rejected' ? 'x' : 'check'" [size]="14" />
+                {{ r.status === 'Rejected' ? 'Rejected' : 'Approved' }} by
+                {{ r.approvedBy | fullName }}
+              </p>
+            }
+          </div>
+        </section>
+
+        <section class="panel panel__body">
+          <app-request-comments [requestId]="r.id" [canComment]="permissions().contribute" />
+        </section>
+      </div>
+
+      <aside class="stack">
+        <section class="panel panel__body">
+          <app-request-history [requestId]="r.id" [version]="historyVersion()" />
+        </section>
+        <section class="panel panel__body">
+          <app-request-attachments [requestId]="r.id" [canManage]="permissions().contribute" />
+        </section>
+      </aside>
+    </div>
+  } @else {
+    <span class="skeleton" style="width: 240px; height: 24px"></span>
+  }
+</div>
