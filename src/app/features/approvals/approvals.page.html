@@ -1,0 +1,146 @@
+<div class="page">
+  <app-page-header
+    title="Approvals"
+    [description]="
+      isManager()
+        ? 'Requests from your direct reports, soonest first.'
+        : 'Requests from everyone in the company, soonest first.'
+    "
+  />
+
+  <section class="panel">
+    <div class="toolbar">
+      <label class="toolbar__filter">
+        <span class="text-secondary">Status</span>
+        <select #statusSelect class="select" (change)="setStatus(statusSelect.value)">
+          @for (option of statuses; track option.value) {
+            <option [value]="option.value" [selected]="option.value === activeStatus()">
+              {{ option.label }}
+            </option>
+          }
+          <option value="all" [selected]="activeStatus() === 'all'">All</option>
+        </select>
+      </label>
+      @if (data.value()?.page?.meta; as meta) {
+        <span class="toolbar__spacer"></span>
+        <span class="text-secondary"
+          >{{ meta.total }} {{ meta.total === 1 ? 'request' : 'requests' }}</span
+        >
+      }
+    </div>
+
+    @if (data.error(); as error) {
+      <app-load-error [error]="error" (retry)="data.reload()" />
+    } @else if (data.hasValue() && rows().length === 0) {
+      @if (activeStatus() === 'Pending') {
+        <app-empty-state
+          icon="approvals"
+          title="You're all caught up"
+          [description]="
+            isManager()
+              ? 'When someone on your team submits a request, it will show up here.'
+              : 'When someone submits a request, it will show up here.'
+          "
+        />
+      } @else {
+        <app-empty-state title="No requests with this status" />
+      }
+    } @else {
+      <div class="table-wrap" [attr.aria-busy]="data.isLoading()">
+        <table class="table table--stack">
+          <thead>
+            <tr>
+              <th scope="col">Employee</th>
+              <th scope="col">Leave type</th>
+              <th scope="col">Dates</th>
+              <th scope="col" class="num">Days</th>
+              <th scope="col" class="num">Balance left</th>
+              <th scope="col">Team overlap</th>
+              <th scope="col">Status</th>
+              <th scope="col" class="actions"><span class="visually-hidden">Actions</span></th>
+            </tr>
+          </thead>
+          @if (data.hasValue()) {
+            <tbody>
+              @for (row of rows(); track row.request.id) {
+                <tr>
+                  <td data-primary>
+                    <a class="person" [routerLink]="['/requests', row.request.id]">
+                      <app-avatar [person]="row.request.user" />
+                      <span class="person__text">
+                        {{ row.request.user | fullName }}
+                        @if (row.request.comment) {
+                          <span class="person__note" [appTooltip]="row.request.comment"
+                            >“{{ row.request.comment }}”</span
+                          >
+                        }
+                      </span>
+                    </a>
+                  </td>
+                  <td data-label="Leave type"><app-leave-type [type]="row.request.leaveType" /></td>
+                  <td data-label="Dates">
+                    {{ row.request.startDate | dateRange: row.request.endDate }}
+                  </td>
+                  <td data-label="Days" class="num">{{ row.request.totalDays }}</td>
+                  <td data-label="Balance left" class="num">
+                    @if (row.remaining === null) {
+                      <span class="text-meta">—</span>
+                    } @else {
+                      <span
+                        [class.over]="
+                          row.request.status === 'Pending' && row.remaining < row.request.totalDays
+                        "
+                      >
+                        {{ row.remaining }}
+                      </span>
+                    }
+                  </td>
+                  <td data-label="Team overlap">
+                    @if (row.overlaps.length) {
+                      <span class="overlap" tabindex="0" [appTooltip]="overlapText(row)">
+                        {{ row.overlaps.length }}
+                        {{ row.overlaps.length === 1 ? 'person' : 'people' }} away
+                      </span>
+                    } @else {
+                      <span class="text-meta">None</span>
+                    }
+                  </td>
+                  <td data-label="Status"><app-status-badge [status]="row.request.status" /></td>
+                  <td class="actions">
+                    @if (isOwn(row.request)) {
+                      <span class="text-meta">Your request</span>
+                    } @else if (row.request.status === 'Pending') {
+                      <button
+                        type="button"
+                        class="btn btn--sm"
+                        [disabled]="pendingId() === row.request.id"
+                        (click)="reject(row.request)"
+                      >
+                        Reject
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn--sm btn--primary"
+                        [disabled]="pendingId() === row.request.id"
+                        (click)="approve(row.request)"
+                      >
+                        Approve
+                      </button>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          } @else {
+            <tbody appSkeletonRows columns="8"></tbody>
+          }
+        </table>
+      </div>
+      @if ((data.value()?.page?.meta?.totalPages ?? 0) > 1) {
+        <div class="panel__footer">
+          <app-pagination [meta]="data.value()?.page?.meta" (pageChange)="goToPage($event)" />
+        </div>
+      }
+    }
+  </section>
+</div>
