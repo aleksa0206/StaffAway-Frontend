@@ -1,0 +1,105 @@
+<div class="page">
+  <app-page-header title="My leave" description="Your balance and every request you have made." />
+
+  <div class="layout-split">
+    <section class="panel" aria-labelledby="requests-title">
+      <h2 class="visually-hidden" id="requests-title">Requests</h2>
+      <app-tabs
+        label="Requests"
+        idPrefix="my-leave"
+        [tabs]="tabs()"
+        [active]="activeTab()"
+        (select)="selectTab($event)"
+      />
+      <div
+        id="my-leave-panel"
+        role="tabpanel"
+        [attr.aria-labelledby]="'my-leave-tab-' + activeTab()"
+      >
+        @if (requests.error(); as error) {
+          <app-load-error [error]="error" (retry)="requests.reload()" />
+        } @else if (requests.hasValue() && requests.value().data.length === 0) {
+          <app-empty-state
+            icon="plane"
+            [title]="emptyText().title"
+            [description]="emptyText().description"
+          >
+            @if (activeTab() !== 'pending') {
+              <a class="btn btn--primary" routerLink="/requests/new">Request leave</a>
+            }
+          </app-empty-state>
+        } @else {
+          <div class="table-wrap table-wrap--flush" [attr.aria-busy]="requests.isLoading()">
+            <table class="table table--stack">
+              <thead>
+                <tr>
+                  <th scope="col">Leave type</th>
+                  <th scope="col">Dates</th>
+                  <th scope="col" class="num">Days</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Submitted</th>
+                </tr>
+              </thead>
+              @if (requests.hasValue()) {
+                <tbody>
+                  @for (r of requests.value().data; track r.id) {
+                    <tr>
+                      <td data-primary>
+                        <a [routerLink]="['/requests', r.id]"
+                          ><app-leave-type [type]="r.leaveType"
+                        /></a>
+                      </td>
+                      <td data-label="Dates">{{ r.startDate | dateRange: r.endDate }}</td>
+                      <td data-label="Days" class="num">{{ r.totalDays }}</td>
+                      <td data-label="Status"><app-status-badge [status]="r.status" /></td>
+                      <td data-label="Submitted" class="text-secondary">
+                        {{ r.createdAt | timestamp }}
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              } @else {
+                <tbody appSkeletonRows columns="5" rows="4"></tbody>
+              }
+            </table>
+          </div>
+          @if ((requests.value()?.meta?.totalPages ?? 0) > 1) {
+            <div class="panel__footer">
+              <app-pagination [meta]="requests.value()?.meta" (pageChange)="goToPage($event)" />
+            </div>
+          }
+        }
+      </div>
+    </section>
+
+    <aside class="panel" aria-labelledby="balance-title">
+      <header class="panel__header">
+        <h2 class="panel__title" id="balance-title">Balance</h2>
+        <select
+          #yearSelect
+          class="select year-select"
+          aria-label="Year"
+          (change)="setYear(yearSelect.value)"
+        >
+          @for (y of years; track y) {
+            <option [value]="y" [selected]="y === activeYear()">{{ y }}</option>
+          }
+        </select>
+      </header>
+      <div class="panel__body">
+        @if (balanceData.error(); as error) {
+          <app-load-error [error]="error" (retry)="balanceData.reload()" />
+        } @else if (balanceData.hasValue() && breakdown().length === 0) {
+          <p class="text-secondary">
+            No balance recorded for {{ activeYear() }}. Hr manages balances; leave types that count
+            toward a balance can't be approved without one.
+          </p>
+        } @else if (balanceData.hasValue()) {
+          <app-balance-summary [rows]="breakdown()" />
+        } @else {
+          <span class="skeleton" style="width: 80%"></span>
+        }
+      </div>
+    </aside>
+  </div>
+</div>
