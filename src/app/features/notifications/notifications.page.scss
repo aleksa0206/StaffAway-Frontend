@@ -1,0 +1,37 @@
+.notifications {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.notification {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-left: 2px solid transparent;
+
+  & + & {
+    border-top: 1px solid var(--color-border);
+  }
+}
+
+.notification--unread {
+  border-left-color: var(--color-accent);
+
+  .notification__body p:first-child {
+    font-weight: var(--font-weight-medium);
+  }
+}
+
+.notification__body {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.notification__actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: var(--space-1);
+}

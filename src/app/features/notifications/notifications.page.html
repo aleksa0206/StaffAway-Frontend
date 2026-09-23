@@ -1,0 +1,66 @@
+<div class="page page--narrow">
+  <app-page-header title="Notifications" />
+
+  <div class="toolbar" role="group" aria-label="Notification filter">
+    <button
+      type="button"
+      class="btn btn--sm"
+      [class.btn--primary]="!unreadOnly()"
+      [attr.aria-pressed]="!unreadOnly()"
+      (click)="setUnreadOnly(false)"
+    >
+      All
+    </button>
+    <button
+      type="button"
+      class="btn btn--sm"
+      [class.btn--primary]="unreadOnly()"
+      [attr.aria-pressed]="unreadOnly()"
+      (click)="setUnreadOnly(true)"
+    >
+      Unread
+    </button>
+  </div>
+
+  @if (notifications.error(); as error) {
+    <app-load-error [error]="error" (retry)="notifications.reload()" />
+  } @else if (notifications.hasValue() && notifications.value().data.length === 0) {
+    <app-empty-state
+      icon="bell"
+      [title]="unreadOnly() ? 'All caught up' : 'No notifications'"
+      description="Updates on decisions about your requests show up here."
+    />
+  } @else if (notifications.hasValue()) {
+    <ul class="notifications" [attr.aria-busy]="notifications.isLoading()">
+      @for (n of notifications.value().data; track n.id) {
+        <li class="notification" [class.notification--unread]="!n.isRead">
+          <div class="notification__body">
+            <p>
+              @if (!n.isRead) {
+                <span class="visually-hidden">Unread: </span>
+              }
+              {{ n.message }}
+            </p>
+            <p class="text-meta">{{ typeLabels[n.type] }} · {{ n.createdAt | timestamp }}</p>
+          </div>
+          <div class="notification__actions">
+            @if (!n.isRead) {
+              <button type="button" class="btn btn--sm" (click)="markRead(n)">Mark as read</button>
+            }
+            <button
+              type="button"
+              class="btn btn--ghost btn--icon btn--sm"
+              aria-label="Delete notification"
+              (click)="remove(n)"
+            >
+              <app-icon name="trash" [size]="14" />
+            </button>
+          </div>
+        </li>
+      }
+    </ul>
+    <app-pagination [meta]="notifications.value().meta" (pageChange)="goToPage($event)" />
+  } @else {
+    <span class="skeleton" style="width: 80%"></span>
+  }
+</div>
