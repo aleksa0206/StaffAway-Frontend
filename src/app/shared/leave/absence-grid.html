@@ -1,0 +1,88 @@
+<div class="grid" [class.grid--compact]="compact()" role="table" [attr.aria-label]="caption()">
+  <div class="grid__row grid__row--head" role="row">
+    <div class="grid__name grid__corner" role="columnheader">
+      <span class="visually-hidden">Person</span>
+    </div>
+    <div class="grid__track grid__track--head" role="presentation">
+      @for (day of days(); track day.iso) {
+        <div
+          class="day-head"
+          role="columnheader"
+          [class.day--off]="day.isWeekend || day.holiday"
+          [class.day-head--today]="day.isToday"
+          [attr.aria-label]="
+            day.weekday + ' ' + day.dayOfMonth + (day.holiday ? ', ' + day.holiday : '')
+          "
+          [appTooltip]="day.holiday ?? ''"
+        >
+          <span class="day-head__weekday" aria-hidden="true">{{ day.weekday.charAt(0) }}</span>
+          <span class="day-head__date" aria-hidden="true">{{ day.dayOfMonth }}</span>
+        </div>
+      }
+    </div>
+  </div>
+
+  @for (row of rows(); track row.person.id) {
+    <div class="grid__row" role="row">
+      <div class="grid__name" role="rowheader">
+        <app-avatar [person]="row.person" [size]="compact() ? 22 : 26" />
+        <span class="grid__person">
+          <span class="grid__person-name"
+            >{{ row.person.firstName }} {{ row.person.lastName }}</span
+          >
+          @if (row.subtitle && !compact()) {
+            <span class="grid__person-sub">{{ row.subtitle }}</span>
+          }
+        </span>
+      </div>
+      <div class="grid__track" role="cell">
+        @for (day of days(); track day.iso) {
+          <span
+            class="day"
+            aria-hidden="true"
+            [class.day--off]="day.isWeekend || day.holiday"
+            [class.day--today]="day.isToday"
+          ></span>
+        }
+        @for (bar of barsFor(row.person.id); track bar.request.id) {
+          <a
+            class="bar"
+            [routerLink]="['/requests', bar.request.id]"
+            [class.bar--pending]="bar.request.status === 'Pending'"
+            [class.bar--open-start]="bar.continuesBefore"
+            [class.bar--open-end]="bar.continuesAfter"
+            [style.--leave-color]="color(bar)"
+            [style.left.%]="(bar.start / days().length) * 100"
+            [style.width.%]="(bar.span / days().length) * 100"
+            [attr.aria-label]="describe(bar, row.person)"
+            [appTooltip]="describe(bar, row.person)"
+          >
+            @if (bar.span >= 3 && !compact()) {
+              <span class="bar__label" aria-hidden="true">{{ bar.request.leaveType.name }}</span>
+            }
+          </a>
+        }
+      </div>
+    </div>
+  }
+
+  @if (showAvailability()) {
+    <div class="grid__row grid__row--foot" role="row">
+      <div class="grid__name grid__foot-label" role="rowheader">Away</div>
+      <div class="grid__track grid__track--head" role="presentation">
+        @for (count of counts(); track $index) {
+          <div
+            class="day-count"
+            role="cell"
+            [class.day-count--busy]="count >= busyThreshold()"
+            [attr.aria-label]="
+              count + ' away on ' + days()[$index]!.weekday + ' ' + days()[$index]!.dayOfMonth
+            "
+          >
+            {{ count || '' }}
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>

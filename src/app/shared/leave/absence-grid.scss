@@ -1,0 +1,237 @@
+:host {
+  --name-width: 220px;
+  --row-height: 44px;
+  --day-min: 28px;
+  display: block;
+  overflow-x: auto;
+}
+
+.grid {
+  min-width: calc(var(--name-width) + var(--days) * var(--day-min));
+}
+
+.grid--compact {
+  --name-width: 170px;
+  --row-height: 36px;
+  --day-min: 24px;
+}
+
+.grid__row {
+  display: flex;
+  min-height: var(--row-height);
+  border-bottom: 1px solid var(--color-border);
+
+  &:last-child {
+    border-bottom: 0;
+  }
+}
+
+.grid__row--head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  min-height: 48px;
+  background: var(--color-surface-subtle);
+}
+
+.grid__row--foot {
+  min-height: 34px;
+  background: var(--color-surface-subtle);
+}
+
+.grid__name {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  display: flex;
+  flex: 0 0 var(--name-width);
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: 0 var(--space-3);
+  border-right: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.grid__corner,
+.grid__foot-label {
+  background: var(--color-surface-subtle);
+}
+
+.grid__foot-label {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-meta);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.grid__person {
+  display: grid;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.grid__person-name,
+.grid__person-sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.grid__person-name {
+  font-weight: var(--font-weight-medium);
+}
+
+.grid__person-sub {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-meta);
+}
+
+.grid__track {
+  position: relative;
+  display: grid;
+  flex: 1;
+  grid-template-columns: repeat(var(--days), minmax(var(--day-min), 1fr));
+}
+
+// ---------- Day columns ----------
+
+.day-head {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 1px;
+  border-left: 1px solid transparent;
+  line-height: 1.1;
+}
+
+.day-head__weekday {
+  color: var(--color-text-tertiary);
+  font-size: 10px;
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+}
+
+.day-head__date {
+  font-size: var(--font-size-meta);
+  font-weight: var(--font-weight-semibold);
+}
+
+.day-head--today .day-head__date {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  color: #fff;
+}
+
+.day {
+  border-left: 1px solid color-mix(in srgb, var(--color-border) 55%, transparent);
+}
+
+.day--off {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--color-surface-subtle) 0 4px,
+    color-mix(in srgb, var(--color-surface-hover) 70%, transparent) 4px 5px
+  );
+}
+
+.day-head.day--off .day-head__weekday,
+.day-head.day--off .day-head__date {
+  color: var(--color-text-tertiary);
+}
+
+.day--today {
+  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--color-accent) 60%, transparent);
+}
+
+// ---------- Absence bars ----------
+
+.bar {
+  position: absolute;
+  top: 50%;
+  display: flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 6px;
+  overflow: hidden;
+  border-radius: 5px;
+  background: var(--leave-color);
+  color: #fff;
+  font-size: 11px;
+  font-weight: var(--font-weight-semibold);
+  transform: translateY(-50%);
+  // Inset so neighbouring bars don't merge visually.
+  margin-left: 2px;
+  max-width: calc(100% - 4px);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--leave-color) 80%, black);
+  text-decoration: none;
+
+  &:hover {
+    filter: brightness(0.94);
+    text-decoration: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-text);
+    outline-offset: 1px;
+  }
+}
+
+.grid--compact .bar {
+  height: 18px;
+}
+
+// Pending: hatched and outlined, so it reads as "not confirmed" without relying on colour.
+.bar--pending {
+  background: repeating-linear-gradient(
+    -45deg,
+    color-mix(in srgb, var(--leave-color) 22%, white) 0 5px,
+    color-mix(in srgb, var(--leave-color) 38%, white) 5px 10px
+  );
+  box-shadow: inset 0 0 0 1.5px var(--leave-color);
+  color: color-mix(in srgb, var(--leave-color) 70%, black);
+}
+
+.bar--open-start {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  margin-left: 0;
+}
+
+.bar--open-end {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.bar__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// ---------- Availability ----------
+
+.day-count {
+  display: grid;
+  place-items: center;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-meta);
+  font-weight: var(--font-weight-semibold);
+}
+
+.day-count--busy {
+  margin: 4px 2px;
+  border-radius: 4px;
+  background: var(--color-warning-subtle);
+  color: var(--color-warning);
+}
+
+// Bars that continue past the visible range are clipped at the edge instead of scrolling.
+.grid__row:not(.grid__row--head):not(.grid__row--foot) .grid__track {
+  overflow: hidden;
+}

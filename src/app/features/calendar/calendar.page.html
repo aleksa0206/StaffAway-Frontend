@@ -1,0 +1,133 @@
+<div class="page page--wide">
+  <app-page-header
+    title="Team calendar"
+    description="Who is away, when, and whether the team is still covered."
+  />
+
+  <section class="panel">
+    <div class="calendar-toolbar">
+      <div class="month-nav">
+        <button
+          type="button"
+          class="btn btn--icon"
+          aria-label="Previous month"
+          (click)="goToMonth(-1)"
+        >
+          <app-icon name="chevronLeft" />
+        </button>
+        <button type="button" class="btn" (click)="goToMonth('today')">Today</button>
+        <button type="button" class="btn btn--icon" aria-label="Next month" (click)="goToMonth(1)">
+          <app-icon name="chevronRight" />
+        </button>
+        <h2 class="month-nav__title" aria-live="polite">{{ monthTitle() }}</h2>
+      </div>
+
+      <div class="calendar-toolbar__filters">
+        <div class="segmented" role="group" aria-label="Show">
+          @for (option of scopes(); track option.id) {
+            <button
+              type="button"
+              [attr.aria-pressed]="activeScope() === option.id"
+              (click)="setScope(option.id)"
+            >
+              {{ option.label }}
+            </button>
+          }
+        </div>
+
+        @if (activeScope() === 'department') {
+          <select
+            #departmentSelect
+            class="select department-select"
+            aria-label="Department"
+            (change)="setDepartment(departmentSelect.value)"
+          >
+            <option value="" disabled>Select a department</option>
+            @for (d of departments.value(); track d.id) {
+              <option [value]="d.id" [selected]="d.id === activeDepartment()">{{ d.name }}</option>
+            }
+          </select>
+        }
+
+        <app-search-input label="Find a person" [value]="q() ?? ''" (search)="setSearch($event)" />
+      </div>
+    </div>
+
+    @if (data.error(); as error) {
+      <app-load-error [error]="error" (retry)="data.reload()" />
+    } @else if (activeScope() === 'department' && !activeDepartment()) {
+      <app-empty-state
+        icon="building"
+        title="Choose a department"
+        description="Pick a department to see its absences."
+      />
+    } @else if (data.hasValue() && rows().length === 0) {
+      <app-empty-state
+        icon="users"
+        [title]="q() ? 'Nobody matches “' + q() + '”' : 'Nobody to show'"
+        [description]="
+          q() ? 'Try another name or clear the search.' : 'There are no people in this view.'
+        "
+      />
+    } @else if (!data.hasValue()) {
+      <div class="panel__body loading" aria-busy="true">
+        @for (i of [1, 2, 3, 4, 5]; track i) {
+          <span class="skeleton"></span>
+        }
+      </div>
+    } @else if (narrow()) {
+      <!-- Mobile: agenda of working days on which someone is away. -->
+      @if (agenda().length === 0) {
+        <app-empty-state icon="calendar" title="Nobody is away this month" />
+      } @else {
+        <ol class="agenda" [attr.aria-label]="caption()">
+          @for (entry of agenda(); track entry.day.iso) {
+            <li class="agenda__day" [class.agenda__day--today]="entry.day.isToday">
+              <div class="agenda__date">
+                <span class="agenda__weekday">{{ entry.day.weekday }}</span>
+                <span class="agenda__number">{{ entry.day.dayOfMonth }}</span>
+              </div>
+              <ul class="agenda__list">
+                @if (entry.day.holiday) {
+                  <li class="agenda__holiday">
+                    <app-icon name="sun" [size]="14" />
+                    {{ entry.day.holiday }}
+                  </li>
+                }
+                @for (r of entry.absences; track r.id) {
+                  <li>
+                    <a class="agenda__item" [routerLink]="['/requests', r.id]">
+                      <app-avatar [person]="r.user" [size]="24" />
+                      <span class="agenda__name">{{ r.user | fullName }}</span>
+                      <app-leave-type [type]="r.leaveType" />
+                      @if (r.status === 'Pending') {
+                        <app-status-badge [status]="r.status" />
+                      }
+                    </a>
+                  </li>
+                }
+              </ul>
+            </li>
+          }
+        </ol>
+      }
+    } @else {
+      <app-absence-grid
+        [rows]="rows()"
+        [days]="days()"
+        [requests]="visibleRequests()"
+        [caption]="caption()"
+      />
+    }
+
+    <footer class="legend" aria-label="Legend">
+      @for (type of legendTypes(); track type.id) {
+        <app-leave-type [type]="type" />
+      }
+      <span class="legend__spacer"></span>
+      <span class="legend__item"><span class="swatch swatch--approved"></span>Approved</span>
+      <span class="legend__item"><span class="swatch swatch--pending"></span>Pending</span>
+      <span class="legend__item"><span class="swatch swatch--off"></span>Weekend / holiday</span>
+    </footer>
+  </section>
+</div>
