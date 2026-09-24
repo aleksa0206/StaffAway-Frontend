@@ -1,0 +1,193 @@
+@use 'mixins' as *;
+
+.home-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.home-header__date {
+  @include text('secondary');
+  margin-bottom: 2px;
+}
+
+.home-header__actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+// ---------- Key figures ----------
+
+.stats {
+  margin-bottom: var(--space-5);
+}
+
+.stats--inline {
+  margin: 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.stat--link {
+  color: inherit;
+  text-decoration: none;
+  transition: background-color var(--transition-fast);
+
+  &:hover {
+    background: var(--color-surface-subtle);
+    text-decoration: none;
+  }
+
+  &:first-child {
+    border-radius: var(--radius-md) 0 0 var(--radius-md);
+  }
+}
+
+.stat__value small {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-secondary);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0;
+}
+
+.stat__value--text {
+  font-size: 18px;
+  line-height: 1.55;
+}
+
+.stat--attention .stat__value {
+  color: var(--color-accent);
+}
+
+.panel__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-size-secondary);
+  font-weight: var(--font-weight-medium);
+}
+
+// ---------- Decisions ----------
+
+.decision {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+
+  & + & {
+    border-top: 1px solid var(--color-border);
+  }
+
+  @include down('sm') {
+    flex-wrap: wrap;
+  }
+}
+
+.decision__main {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+}
+
+.decision__name {
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
+}
+
+.decision__meta {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-secondary);
+}
+
+.decision__note {
+  @include truncate;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-secondary);
+  font-style: italic;
+}
+
+.decision__actions {
+  display: flex;
+  gap: var(--space-2);
+
+  @include down('sm') {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+// ---------- Company today ----------
+
+.away-list {
+  display: grid;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-4);
+
+    & + li {
+      border-top: 1px solid var(--color-border);
+    }
+  }
+}
+
+.away-list__name {
+  flex: 1;
+  font-weight: var(--font-weight-medium);
+}
+
+// ---------- My upcoming leave ----------
+
+.upcoming__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  color: inherit;
+
+  &:hover {
+    background: var(--color-surface-subtle);
+    text-decoration: none;
+  }
+
+  li + li & {
+    border-top: 1px solid var(--color-border);
+  }
+}
+
+.upcoming__date {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 42px;
+  height: 44px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-subtle);
+  line-height: 1.1;
+}
+
+.upcoming__day {
+  font-size: 16px;
+  font-weight: var(--font-weight-semibold);
+}
+
+.upcoming__month {
+  color: var(--color-text-tertiary);
+  font-size: 10px;
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+}
+
+.upcoming__main {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+}

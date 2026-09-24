@@ -1,0 +1,258 @@
+<div class="page">
+  <header class="home-header">
+    <div>
+      <p class="home-header__date">{{ todayText }}</p>
+      <h1>Hello, {{ user().firstName }}</h1>
+    </div>
+    <div class="home-header__actions">
+      <a class="btn" routerLink="/calendar">
+        <app-icon name="calendar" />
+        Team calendar
+      </a>
+    </div>
+  </header>
+
+  <!-- Key figures: each one answers a question and links to where it can be acted on. -->
+  <section class="panel stats" aria-label="Summary">
+    <a class="stat stat--link" routerLink="/leave">
+      <span class="stat__label">{{ primary()?.leaveType?.name ?? 'Leave' }} left</span>
+      <span class="stat__value">
+        @if (myYear.isLoading() && !myYear.hasValue()) {
+          <span class="skeleton" style="width: 48px; height: 26px"></span>
+        } @else if (primary(); as p) {
+          {{ p.remaining }} <small>/ {{ p.total }} days</small>
+        } @else {
+          —
+        }
+      </span>
+      <span class="stat__hint">{{ primary() ? 'This year' : 'No balance recorded' }}</span>
+    </a>
+    <a class="stat stat--link" routerLink="/leave">
+      <span class="stat__label">Next leave</span>
+      <span class="stat__value stat__value--text">
+        @if (nextLeave(); as next) {
+          {{ next.startDate | dateRange: next.endDate }}
+        } @else {
+          None planned
+        }
+      </span>
+      <span class="stat__hint">{{ nextLeave()?.leaveType?.name ?? 'Approved requests only' }}</span>
+    </a>
+    <a class="stat stat--link" [routerLink]="'/leave'" [queryParams]="{ tab: 'pending' }">
+      <span class="stat__label">My pending requests</span>
+      <span class="stat__value">{{ myPendingCount() }}</span>
+      <span class="stat__hint">Waiting for your manager</span>
+    </a>
+    @if (decides()) {
+      <a class="stat stat--link stat--attention" routerLink="/approvals">
+        <span class="stat__label">Awaiting your decision</span>
+        <span class="stat__value">{{ toDecide.value()?.meta?.total ?? '—' }}</span>
+        <span class="stat__hint">{{
+          isManager() ? 'From your direct reports' : 'Across the company'
+        }}</span>
+      </a>
+    }
+  </section>
+
+  <div class="layout-split">
+    <div class="stack">
+      @if (decides()) {
+        <section class="panel" aria-labelledby="decide-title">
+          <header class="panel__header">
+            <h2 class="panel__title" id="decide-title">
+              Needs your decision
+              @if (toDecide.value()?.meta?.total) {
+                <span class="panel__count">{{ toDecide.value()!.meta.total }}</span>
+              }
+            </h2>
+            <a routerLink="/approvals" class="panel__link">
+              All approvals
+              <app-icon name="arrowRight" [size]="14" />
+            </a>
+          </header>
+          @if (toDecide.error(); as error) {
+            <app-load-error [error]="error" (retry)="toDecide.reload()" />
+          } @else if (toDecide.hasValue() && decidable().length === 0) {
+            <app-empty-state
+              icon="approvals"
+              title="You're all caught up"
+              description="No requests are waiting for your decision."
+            />
+          } @else {
+            <ul class="decisions">
+              @for (r of decidable(); track r.id) {
+                <li class="decision">
+                  <app-avatar [person]="r.user" [size]="34" />
+                  <div class="decision__main">
+                    <a [routerLink]="['/requests', r.id]" class="decision__name">{{
+                      r.user | fullName
+                    }}</a>
+                    <span class="decision__meta">
+                      <app-leave-type [type]="r.leaveType" />
+                      · {{ r.startDate | dateRange: r.endDate }} · {{ r.totalDays }}
+                      {{ r.totalDays === 1 ? 'day' : 'days' }}
+                    </span>
+                    @if (r.comment) {
+                      <span class="decision__note">“{{ r.comment }}”</span>
+                    }
+                  </div>
+                  <div class="decision__actions">
+                    <button
+                      type="button"
+                      class="btn btn--sm"
+                      [disabled]="decidingId() === r.id"
+                      (click)="reject(r)"
+                    >
+                      Reject
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn--sm btn--primary"
+                      [disabled]="decidingId() === r.id"
+                      (click)="approve(r)"
+                    >
+                      Approve
+                    </button>
+                  </div>
+                </li>
+              } @empty {
+                @if (toDecide.isLoading()) {
+                  <li class="decision"><span class="skeleton" style="width: 60%"></span></li>
+                }
+              }
+            </ul>
+          }
+        </section>
+      }
+
+      @if (isHr()) {
+        <section class="panel" aria-labelledby="today-title">
+          <header class="panel__header">
+            <h2 class="panel__title" id="today-title">Company today</h2>
+            <a routerLink="/calendar" [queryParams]="{ scope: 'all' }" class="panel__link">
+              Open calendar
+              <app-icon name="arrowRight" [size]="14" />
+            </a>
+          </header>
+          @if (company.error(); as error) {
+            <app-load-error [error]="error" (retry)="company.reload()" />
+          } @else if (company.value(); as c) {
+            <div class="stats stats--inline">
+              <div class="stat">
+                <span class="stat__label">Away today</span>
+                <span class="stat__value">{{ c.awayToday.length }}</span>
+                <span class="stat__hint">of {{ c.headcount }} people</span>
+              </div>
+              <div class="stat">
+                <span class="stat__label">Requests covering the next 7 days</span>
+                <span class="stat__value">{{ c.awayThisWeekCount }}</span>
+                <span class="stat__hint">Approved or pending</span>
+              </div>
+            </div>
+            @if (c.awayToday.length) {
+              <ul class="away-list">
+                @for (r of c.awayToday; track r.id) {
+                  <li>
+                    <app-avatar [person]="r.user" [size]="26" />
+                    <span class="away-list__name">{{ r.user | fullName }}</span>
+                    <app-leave-type [type]="r.leaveType" />
+                    <span class="text-meta">until {{ r.endDate | dateRange: r.endDate }}</span>
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p class="panel__body text-secondary">Everyone is in today.</p>
+            }
+          } @else {
+            <div class="panel__body"><span class="skeleton" style="width: 50%"></span></div>
+          }
+        </section>
+      } @else {
+        <section class="panel" aria-labelledby="team-title">
+          <header class="panel__header">
+            <h2 class="panel__title" id="team-title">
+              {{ isManager() ? 'Your direct reports' : 'Your team' }} · next two weeks
+            </h2>
+            <a routerLink="/calendar" class="panel__link">
+              Full calendar
+              <app-icon name="arrowRight" [size]="14" />
+            </a>
+          </header>
+          @if (team.error(); as error) {
+            <app-load-error [error]="error" (retry)="team.reload()" />
+          } @else if (!teamRows().length && team.hasValue()) {
+            <app-empty-state
+              icon="users"
+              title="No team to show"
+              description="Team availability appears once Hr assigns you a manager or direct reports."
+            />
+          } @else if (team.value(); as t) {
+            <app-absence-grid
+              [rows]="teamRows()"
+              [days]="calendarDays()"
+              [requests]="t.requests"
+              [compact]="true"
+              caption="Team absences in the next two weeks"
+            />
+          } @else {
+            <div class="panel__body"><span class="skeleton" style="width: 70%"></span></div>
+          }
+        </section>
+      }
+    </div>
+
+    <aside class="stack">
+      <section class="panel" aria-labelledby="upcoming-title">
+        <header class="panel__header">
+          <h2 class="panel__title" id="upcoming-title">My upcoming leave</h2>
+          <a routerLink="/leave" class="panel__link">View all</a>
+        </header>
+        @if (myUpcoming.error(); as error) {
+          <app-load-error [error]="error" (retry)="myUpcoming.reload()" />
+        } @else if (myUpcoming.value()?.length === 0) {
+          <app-empty-state icon="plane" title="Nothing planned yet">
+            <a class="btn btn--sm" routerLink="/requests/new">Request leave</a>
+          </app-empty-state>
+        } @else {
+          <ul class="upcoming">
+            @for (r of myUpcoming.value(); track r.id) {
+              <li>
+                <a class="upcoming__item" [routerLink]="['/requests', r.id]">
+                  <span class="upcoming__date">
+                    <span class="upcoming__day">{{ r.startDate.slice(8, 10) }}</span>
+                    <span class="upcoming__month">{{ monthShort(r.startDate) }}</span>
+                  </span>
+                  <span class="upcoming__main">
+                    <app-leave-type [type]="r.leaveType" />
+                    <span class="text-meta">
+                      {{ r.startDate | dateRange: r.endDate }} · {{ r.totalDays }}
+                      {{ r.totalDays === 1 ? 'day' : 'days' }}
+                    </span>
+                  </span>
+                  <app-status-badge [status]="r.status" />
+                </a>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+
+      <section class="panel" aria-labelledby="balance-title">
+        <header class="panel__header">
+          <h2 class="panel__title" id="balance-title">Balance {{ today.slice(0, 4) }}</h2>
+        </header>
+        <div class="panel__body">
+          @if (myYear.error(); as error) {
+            <app-load-error [error]="error" (retry)="myYear.reload()" />
+          } @else if (myYear.hasValue() && breakdown().length === 0) {
+            <p class="text-secondary">No balance recorded for this year. Hr manages balances.</p>
+          } @else if (myYear.hasValue()) {
+            <app-balance-summary [rows]="breakdown()" />
+          } @else {
+            <span class="skeleton" style="width: 80%"></span>
+          }
+        </div>
+      </section>
+    </aside>
+  </div>
+</div>
