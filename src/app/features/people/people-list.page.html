@@ -1,0 +1,154 @@
+<div class="page">
+  <app-page-header
+    title="People"
+    [description]="teamOnly() ? 'Your direct reports.' : 'Everyone in the company.'"
+  >
+    @if (isHr()) {
+      <a class="btn btn--primary" routerLink="new">
+        <app-icon name="plus" />
+        Add employee
+      </a>
+    }
+  </app-page-header>
+
+  <section class="panel">
+    <div class="toolbar">
+      @if (!isHr()) {
+        <div class="segmented" role="group" aria-label="Show">
+          <button type="button" [attr.aria-pressed]="teamOnly()" (click)="setScope(false)">
+            My team
+          </button>
+          <button type="button" [attr.aria-pressed]="!teamOnly()" (click)="setScope(true)">
+            Everyone
+          </button>
+        </div>
+      }
+      <app-search-input
+        label="Search name or email"
+        [value]="q() ?? ''"
+        (search)="setSearch($event)"
+      />
+      @if (departments.value()?.length) {
+        <select
+          #departmentSelect
+          class="select toolbar__select"
+          aria-label="Department"
+          (change)="setDepartment(departmentSelect.value)"
+        >
+          <option value="">All departments</option>
+          @for (d of departments.value(); track d.id) {
+            <option [value]="d.id" [selected]="d.id === activeDepartment()">{{ d.name }}</option>
+          }
+        </select>
+      }
+      <select
+        #roleSelect
+        class="select toolbar__select"
+        aria-label="Role"
+        (change)="setRole(roleSelect.value)"
+      >
+        <option value="">All roles</option>
+        @for (r of roles; track r.value) {
+          <option [value]="r.value" [selected]="r.value === activeRole()">{{ r.label }}</option>
+        }
+      </select>
+      @if (hasFilters()) {
+        <button type="button" class="btn btn--ghost btn--sm" (click)="clearFilters()">
+          Clear filters
+        </button>
+      }
+      <span class="toolbar__spacer"></span>
+      @if (people.value()?.meta; as meta) {
+        <span class="text-secondary"
+          >{{ meta.total }} {{ meta.total === 1 ? 'person' : 'people' }}</span
+        >
+      }
+    </div>
+
+    @if (people.error(); as error) {
+      <app-load-error [error]="error" (retry)="people.reload()" />
+    } @else if (people.hasValue() && people.value().data.length === 0) {
+      @if (hasFilters()) {
+        <app-empty-state icon="search" title="Nobody matches these filters">
+          <button type="button" class="btn" (click)="clearFilters()">Clear filters</button>
+        </app-empty-state>
+      } @else if (teamOnly()) {
+        <app-empty-state
+          icon="users"
+          title="You have no direct reports"
+          description="Hr decides who reports to whom."
+        >
+          <button type="button" class="btn" (click)="setScope(true)">Show everyone</button>
+        </app-empty-state>
+      } @else {
+        <app-empty-state icon="users" title="No employees yet" />
+      }
+    } @else {
+      <div class="table-wrap table-wrap--flush" [attr.aria-busy]="people.isLoading()">
+        <table class="table table--stack">
+          <thead>
+            <tr>
+              <th scope="col" [attr.aria-sort]="ariaSort('name')">
+                <button type="button" class="sort" (click)="toggleSort('name')">
+                  Name
+                  @if (ariaSort('name')) {
+                    <app-icon
+                      [name]="ariaSort('name') === 'ascending' ? 'chevronDown' : 'chevronUp'"
+                      [size]="12"
+                    />
+                  }
+                </button>
+              </th>
+              <th scope="col">Role</th>
+              <th scope="col">Department</th>
+              <th scope="col" [attr.aria-sort]="ariaSort('hireDate')">
+                <button type="button" class="sort" (click)="toggleSort('hireDate')">
+                  Hired
+                  @if (ariaSort('hireDate')) {
+                    <app-icon
+                      [name]="ariaSort('hireDate') === 'ascending' ? 'chevronDown' : 'chevronUp'"
+                      [size]="12"
+                    />
+                  }
+                </button>
+              </th>
+            </tr>
+          </thead>
+          @if (people.hasValue()) {
+            <tbody>
+              @for (person of people.value().data; track person.id) {
+                <tr>
+                  <td data-primary>
+                    <a class="person" [routerLink]="[person.id]">
+                      <app-avatar [person]="person" [size]="32" />
+                      <span class="person__text">
+                        {{ person | fullName }}
+                        <span class="text-meta">{{ person.email }}</span>
+                      </span>
+                    </a>
+                  </td>
+                  <td data-label="Role">
+                    <span class="badge" [class.badge--info]="person.role !== 'Employee'">{{
+                      roleLabels[person.role]
+                    }}</span>
+                  </td>
+                  <td data-label="Department">
+                    {{ person.departmentId ? departmentNames().get(person.departmentId) : '—' }}
+                  </td>
+                  <td data-label="Hired">{{ person.hireDate | calendarDate }}</td>
+                </tr>
+              }
+            </tbody>
+          } @else {
+            <tbody appSkeletonRows columns="4"></tbody>
+          }
+        </table>
+      </div>
+      @if ((people.value()?.meta?.totalPages ?? 0) > 1) {
+        <div class="panel__footer">
+          <app-pagination [meta]="people.value()?.meta" (pageChange)="goToPage($event)" />
+        </div>
+      }
+    }
+  </section>
+</div>

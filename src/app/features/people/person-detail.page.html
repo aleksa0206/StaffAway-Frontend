@@ -1,0 +1,177 @@
+<div class="page">
+  @if (person.error(); as error) {
+    <app-page-header title="Employee" backLink="/people" backLabel="People" />
+    <app-load-error [error]="error" (retry)="person.reload()" />
+  } @else if (person.value(); as p) {
+    <a class="back" routerLink="/people">
+      <app-icon name="chevronLeft" [size]="14" />
+      People
+    </a>
+
+    <section class="panel profile">
+      <div class="profile__head">
+        <app-avatar [person]="p" [size]="56" />
+        <div class="profile__identity">
+          <h1>{{ p | fullName }}</h1>
+          <p class="text-secondary">
+            {{ roleLabels[p.role] }}
+            @if (departmentName() !== '—') {
+              · {{ departmentName() }}
+            }
+            · <a [href]="'mailto:' + p.email">{{ p.email }}</a>
+          </p>
+        </div>
+        @if (isHr()) {
+          <div class="profile__actions">
+            <a class="btn" routerLink="edit">
+              <app-icon name="pencil" />
+              Edit
+            </a>
+            @if (!isSelf()) {
+              <button type="button" class="btn" (click)="remove(p)">Delete account</button>
+            }
+          </div>
+        }
+      </div>
+
+      <app-tabs
+        label="Profile sections"
+        idPrefix="profile"
+        [tabs]="tabs"
+        [active]="activeTab()"
+        (select)="selectTab($event)"
+      />
+
+      <div id="profile-panel" role="tabpanel" [attr.aria-labelledby]="'profile-tab-' + activeTab()">
+        @if (activeTab() === 'overview') {
+          <div class="overview">
+            <section>
+              <h2 class="group-title">Organization</h2>
+              <dl class="details">
+                <dt>Role</dt>
+                <dd>{{ roleLabels[p.role] }}</dd>
+                <dt>Department</dt>
+                <dd>{{ departmentName() }}</dd>
+                <dt>Manager</dt>
+                <dd>
+                  @if (p.managerId) {
+                    <a [routerLink]="['/people', p.managerId]">{{ managerName() }}</a>
+                  } @else {
+                    —
+                  }
+                </dd>
+                <dt>Hired</dt>
+                <dd>{{ p.hireDate | calendarDate }}</dd>
+              </dl>
+            </section>
+
+            <section>
+              <h2 class="group-title">Work schedule</h2>
+              @if (schedule.value(); as s) {
+                <dl class="details">
+                  <dt>Hours per week</dt>
+                  <dd>{{ s.hoursPerWeek }} h</dd>
+                  <dt>Contract</dt>
+                  <dd>{{ s.isPartTime ? 'Part-time' : 'Full-time' }}</dd>
+                </dl>
+              } @else if (schedule.hasValue()) {
+                <p class="text-secondary">No schedule recorded.</p>
+              }
+              @if (isHr() && schedule.hasValue()) {
+                <div class="group-actions">
+                  <button
+                    type="button"
+                    class="btn btn--sm"
+                    (click)="editSchedule(schedule.value())"
+                  >
+                    {{ schedule.value() ? 'Edit schedule' : 'Set schedule' }}
+                  </button>
+                  @if (schedule.value(); as s) {
+                    <button
+                      type="button"
+                      class="btn btn--ghost btn--sm"
+                      (click)="removeSchedule(s)"
+                    >
+                      Remove
+                    </button>
+                  }
+                </div>
+              }
+            </section>
+          </div>
+        } @else {
+          <div class="leave">
+            <section>
+              <div class="group-header">
+                <h2 class="group-title">Balances</h2>
+                @if (isHr()) {
+                  <button type="button" class="btn btn--sm" (click)="addBalance()">
+                    <app-icon name="plus" [size]="14" />
+                    Add balance
+                  </button>
+                }
+              </div>
+              @if (balances.error(); as error) {
+                <app-load-error [error]="error" (retry)="balances.reload()" />
+              } @else if (balances.value()?.length === 0) {
+                <p class="text-secondary">No balances recorded.</p>
+              } @else {
+                <app-balance-table
+                  [balances]="balances.value()"
+                  [showYear]="true"
+                  [editable]="isHr()"
+                  (edit)="editBalance($event)"
+                  (remove)="removeBalance($event)"
+                />
+              }
+            </section>
+
+            <section>
+              <div class="group-header">
+                <h2 class="group-title">Requests</h2>
+                @if (requests.value()?.meta; as meta) {
+                  <span class="text-meta">{{ meta.total }} in total</span>
+                }
+              </div>
+              @if (requests.error(); as error) {
+                <app-load-error [error]="error" (retry)="requests.reload()" />
+              } @else if (requests.value()?.data?.length === 0) {
+                <p class="text-secondary">No leave requests.</p>
+              } @else if (requests.value(); as res) {
+                <div class="table-wrap">
+                  <table class="table table--stack">
+                    <thead>
+                      <tr>
+                        <th scope="col">Leave type</th>
+                        <th scope="col">Dates</th>
+                        <th scope="col" class="num">Days</th>
+                        <th scope="col">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (r of res.data; track r.id) {
+                        <tr>
+                          <td data-primary>
+                            <a [routerLink]="['/requests', r.id]"
+                              ><app-leave-type [type]="r.leaveType"
+                            /></a>
+                          </td>
+                          <td data-label="Dates">{{ r.startDate | dateRange: r.endDate }}</td>
+                          <td data-label="Days" class="num">{{ r.totalDays }}</td>
+                          <td data-label="Status"><app-status-badge [status]="r.status" /></td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+                <app-pagination [meta]="res.meta" (pageChange)="goToPage($event)" />
+              }
+            </section>
+          </div>
+        }
+      </div>
+    </section>
+  } @else {
+    <span class="skeleton" style="width: 240px; height: 24px"></span>
+  }
+</div>
