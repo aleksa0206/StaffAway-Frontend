@@ -1,0 +1,109 @@
+<div class="page page--narrow">
+  <app-page-header
+    [title]="isEdit() ? 'Edit employee' : 'New employee'"
+    [backLink]="isEdit() ? '/people/' + id() : '/people'"
+    [backLabel]="isEdit() ? 'Profile' : 'People'"
+  />
+
+  @if (existing.error(); as error) {
+    <app-load-error [error]="error" (retry)="existing.reload()" />
+  } @else {
+    <form class="form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      @if (formError(); as message) {
+        <p class="form-error" role="alert">{{ message }}</p>
+      }
+
+      <div class="form__row">
+        <app-field label="First name">
+          <input class="input" appFieldControl formControlName="firstName" autocomplete="off" />
+        </app-field>
+        <app-field label="Last name">
+          <input class="input" appFieldControl formControlName="lastName" autocomplete="off" />
+        </app-field>
+      </div>
+
+      <app-field label="Email" hint="Used to sign in; must be unique.">
+        <input
+          class="input"
+          appFieldControl
+          type="email"
+          formControlName="email"
+          autocomplete="off"
+        />
+      </app-field>
+
+      @if (!isEdit()) {
+        <app-field
+          label="Initial password"
+          hint="At least 8 characters. The employee can change it later via 'Forgot password'."
+        >
+          <input
+            class="input"
+            appFieldControl
+            type="password"
+            formControlName="password"
+            autocomplete="new-password"
+          />
+        </app-field>
+      }
+
+      <div class="form__row">
+        <app-field label="Role">
+          <select class="select" appFieldControl formControlName="role">
+            @for (role of roles; track role.value) {
+              <option [ngValue]="role.value">{{ role.label }}</option>
+            }
+          </select>
+        </app-field>
+        <app-field label="Hire date">
+          <input class="input" appFieldControl type="date" formControlName="hireDate" />
+        </app-field>
+      </div>
+
+      <div class="form__row">
+        <app-field
+          label="Manager"
+          [optional]="true"
+          hint="The manager approves this person's requests."
+        >
+          <select class="select" appFieldControl formControlName="managerId">
+            <option [ngValue]="null">No manager</option>
+            @for (m of managerOptions(); track m.id) {
+              <option [ngValue]="m.id">{{ m.label }}</option>
+            }
+          </select>
+        </app-field>
+        <app-field label="Department" [optional]="true">
+          <select class="select" appFieldControl formControlName="departmentId">
+            <option [ngValue]="null">No department</option>
+            @for (d of departments.value(); track d.id) {
+              <option [ngValue]="d.id">{{ d.name }}</option>
+            }
+          </select>
+        </app-field>
+      </div>
+
+      @if (!isEdit()) {
+        <p class="text-secondary">
+          A new employee automatically gets a balance for the current year for every leave type that
+          counts toward the balance, based on the company settings.
+        </p>
+      }
+
+      <div class="form__actions">
+        <button
+          type="submit"
+          class="btn btn--primary"
+          [disabled]="submitting()"
+          [attr.aria-busy]="submitting()"
+        >
+          @if (submitting()) {
+            <span class="spinner" aria-hidden="true"></span>
+          }
+          {{ isEdit() ? 'Save' : 'Add employee' }}
+        </button>
+        <button type="button" class="btn" (click)="cancel()">Cancel</button>
+      </div>
+    </form>
+  }
+</div>
