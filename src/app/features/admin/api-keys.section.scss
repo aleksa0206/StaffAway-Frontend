@@ -1,0 +1,29 @@
+code {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-secondary);
+}
+
+.created {
+  margin: var(--space-3) var(--space-4) 0;
+}
+
+.created__body {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.created__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.created__key {
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  overflow-wrap: anywhere;
+}

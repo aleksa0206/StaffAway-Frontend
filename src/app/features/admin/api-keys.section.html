@@ -1,0 +1,90 @@
+<section class="panel" aria-labelledby="api-keys-title">
+  <header class="panel__header">
+    <div>
+      <h2 class="panel__title" id="api-keys-title">API keys</h2>
+      <p class="text-meta">
+        For future integrations. The backend does not use them to authenticate yet.
+      </p>
+    </div>
+    <button type="button" class="btn btn--sm" (click)="create()">
+      <app-icon name="plus" [size]="14" />
+      New key
+    </button>
+  </header>
+
+  @if (justCreated(); as created) {
+    <div class="created alert alert--success" role="status">
+      <app-icon name="key" />
+      <div class="created__body">
+        <p>
+          <strong>Key "{{ created.name }}" was created.</strong> Copy it now and store it somewhere
+          safe.
+        </p>
+        <div class="created__row">
+          <code class="created__key">{{ created.key }}</code>
+          <button type="button" class="btn btn--sm" (click)="copy(created.key)">Copy</button>
+          <button type="button" class="btn btn--ghost btn--sm" (click)="justCreated.set(null)">
+            Done
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (keys.error(); as error) {
+    <app-load-error [error]="error" (retry)="keys.reload()" />
+  } @else if (keys.hasValue() && keys.value().data.length === 0) {
+    <app-empty-state icon="key" title="No API keys" />
+  } @else {
+    <div class="table-wrap table-wrap--flush">
+      <table class="table table--stack">
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Key</th>
+            <th scope="col">Status</th>
+            <th scope="col">Created</th>
+            <th scope="col" class="actions"><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        @if (keys.hasValue()) {
+          <tbody>
+            @for (k of keys.value().data; track k.id) {
+              <tr>
+                <td data-primary>{{ k.name }}</td>
+                <td data-label="Key">
+                  <code>{{ masked(k.key) }}</code>
+                </td>
+                <td data-label="Status">
+                  @if (k.revoked) {
+                    <span class="badge">Revoked</span>
+                  } @else {
+                    <span class="badge badge--success">Active</span>
+                  }
+                </td>
+                <td data-label="Created" class="text-secondary">{{ k.createdAt | timestamp }}</td>
+                <td class="actions">
+                  @if (!k.revoked) {
+                    <button type="button" class="btn btn--ghost btn--sm" (click)="revoke(k)">
+                      Revoke
+                    </button>
+                  }
+                  <button type="button" class="btn btn--ghost btn--sm" (click)="remove(k)">
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        } @else {
+          <tbody appSkeletonRows columns="5" rows="3"></tbody>
+        }
+      </table>
+    </div>
+    @if ((keys.value()?.meta?.totalPages ?? 0) > 1) {
+      <div class="panel__footer">
+        <app-pagination [meta]="keys.value()?.meta" (pageChange)="page.set($event)" />
+      </div>
+    }
+  }
+</section>
