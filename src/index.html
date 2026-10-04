@@ -7,11 +7,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap"
     />
+    <link rel="manifest" href="manifest.webmanifest" />
   </head>
   <body>
     <!-- Shown while the session is restored; Angular replaces it once the app has started. -->
@@ -21,23 +22,9 @@
         aria-label="Loading StaffAway"
         style="display: grid; place-items: center; min-height: 100vh; background: #f4f5f8"
       >
-        <div
-          style="
-            display: grid;
-            place-items: center;
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            background: linear-gradient(145deg, #4f6ef0, #3654d1);
-            color: #fff;
-            font:
-              700 18px system-ui,
-              sans-serif;
-          "
-        >
-          S
-        </div>
+        <img src="logo-mark.png" alt="" width="40" height="40" />
       </div>
     </app-root>
+    <noscript>Please enable JavaScript to continue using this application.</noscript>
   </body>
 </html>

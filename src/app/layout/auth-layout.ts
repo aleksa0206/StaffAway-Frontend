@@ -9,7 +9,7 @@ import { RouterOutlet } from '@angular/router';
     <main class="auth">
       <div class="auth__column">
         <p class="auth__brand">
-          <span class="auth__mark" aria-hidden="true">S</span>
+          <img class="auth__mark" src="logo-mark.png" alt="" width="34" height="34" />
           StaffAway
         </p>
         <div class="auth__panel">
@@ -45,14 +45,8 @@ import { RouterOutlet } from '@angular/router';
       letter-spacing: -0.01em;
     }
     .auth__mark {
-      display: grid;
-      place-items: center;
       width: 34px;
       height: 34px;
-      border-radius: 9px;
-      background: linear-gradient(145deg, #4f6ef0, var(--color-accent));
-      color: #fff;
-      font-weight: var(--font-weight-bold);
     }
     .auth__panel {
       padding: var(--space-8);
