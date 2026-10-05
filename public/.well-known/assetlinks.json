@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "space.staffaway.app",
+        "sha256_cert_fingerprints": ["E5:FA:FA:D9:F8:40:CE:EB:36:DA:7A:33:AC:C0:94:16:A8:F3:4A:92:D9:77:3C:AB:02:9D:C6:8A:C4:4D:46:14"]
+      }
+    }]
