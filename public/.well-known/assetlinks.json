@@ -3,6 +3,6 @@
       "target": {
         "namespace": "android_app",
         "package_name": "space.staffaway.app",
-        "sha256_cert_fingerprints": ["E5:FA:FA:D9:F8:40:CE:EB:36:DA:7A:33:AC:C0:94:16:A8:F3:4A:92:D9:77:3C:AB:02:9D:C6:8A:C4:4D:46:14"]
+        "sha256_cert_fingerprints": ["1E:71:89:3D:2A:16:B9:A6:20:D2:BA:B8:E4:24:30:08:3D:EC:64:03:1E:A8:6B:34:B6:C5:F0:6D:90:C4:E0:9F"]
       }
     }]
