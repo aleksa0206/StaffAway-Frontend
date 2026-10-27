@@ -82,6 +82,28 @@ export class AuthService {
       .pipe(map((res) => this.startSession(res.token, { ...res.user, twoFactorEnabled: true })));
   }
 
+  /** Creates a new organization with the caller as its first Hr; they sign in via the emailed link. */
+  register(input: {
+    companyName: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+  }): Observable<void> {
+    return this.http.post<void>(apiUrl('/auth/register'), input);
+  }
+
+  /** The emailed link both confirms the address and signs the user in. */
+  verifyEmail(token: string): Observable<void> {
+    return this.http
+      .post<LoginResponse>(apiUrl('/auth/verify-email'), { token }, WITH_COOKIE)
+      .pipe(map((res) => this.startSession(res.token, { ...res.user, twoFactorEnabled: false })));
+  }
+
+  resendVerification(email: string): Observable<void> {
+    return this.http.post<void>(apiUrl('/auth/resend-verification'), { email });
+  }
+
   /** Called once on app start; failure only means the user is not signed in. */
   restoreSession(): Promise<void> {
     return firstValueFrom(

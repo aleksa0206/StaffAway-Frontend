@@ -57,7 +57,26 @@ const KNOWN_MESSAGES: ReadonlyArray<[RegExp, string | ((m: RegExpMatchArray) => 
   [/totalDays .* cannot exceed/, 'The number of days exceeds the selected period.'],
   [/^Only pending leave requests can be edited$/, 'Only pending requests can be edited.'],
   [/^Only pending leave requests can be deleted$/, 'Only pending requests can be withdrawn.'],
+  [
+    /own leave requests or those of your direct reports/,
+    'You can only change your own requests or those of your direct reports.',
+  ],
   [/own leave request/, "You can't decide on your own request."],
+  [
+    /^Not enough leave days: (\d+) left, (\d+) requested$/,
+    (m) => `Not enough leave days: ${m[1]} left, ${m[2]} requested.`,
+  ],
+  [
+    /changed in the meantime/,
+    'Someone else changed this request in the meantime. Reload the page and try again.',
+  ],
+  [/^Email address is not verified$/, 'Confirm your email address first. Check your inbox.'],
+  [/verification link/, 'The activation link is invalid or has expired. Request a new one below.'],
+  [
+    /account with this email already exists/,
+    'An account with this email already exists. Sign in instead.',
+  ],
+  [/^Two-factor authentication is already enabled$/, 'Two-factor authentication is already on.'],
   [/direct reports/, 'You can only decide on requests from your direct reports.'],
   [
     /^LeaveBalance not found$/,

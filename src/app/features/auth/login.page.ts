@@ -25,6 +25,8 @@ export default class LoginPage {
   protected readonly step = signal<'credentials' | 'code'>('credentials');
   protected readonly submitting = signal(false);
   protected readonly error = signal<string | null>(null);
+  /** The password was right but the email was never confirmed (the only 403 login returns). */
+  protected readonly unverified = signal(false);
   private tempToken = '';
 
   protected readonly credentials = this.fb.group({
@@ -71,9 +73,14 @@ export default class LoginPage {
   private run<T>(request: Observable<T>, onSuccess: (value: T) => void): void {
     this.submitting.set(true);
     this.error.set(null);
+    this.unverified.set(false);
     request.pipe(finalize(() => this.submitting.set(false))).subscribe({
       next: onSuccess,
-      error: (err: unknown) => this.error.set(toApiError(err).message),
+      error: (err: unknown) => {
+        const apiError = toApiError(err);
+        this.error.set(apiError.message);
+        this.unverified.set(apiError.kind === 'forbidden');
+      },
     });
   }
 

@@ -5,7 +5,12 @@
     <p class="auth-notice" role="status">Your session has expired. Please sign in again.</p>
   }
   @if (error(); as message) {
-    <p class="form-error" role="alert">{{ message }}</p>
+    <p class="form-error" role="alert">
+      {{ message }}
+      @if (unverified()) {
+        <a routerLink="/verify-email">Send a new link</a>
+      }
+    </p>
   }
 
   <form class="auth-form" [formGroup]="credentials" (ngSubmit)="submitCredentials()" novalidate>
@@ -41,6 +46,7 @@
   </form>
 
   <p class="auth-footer"><a routerLink="/forgot-password">Forgot your password?</a></p>
+  <p class="auth-footer">New to StaffAway? <a routerLink="/register">Create an organization</a></p>
 } @else {
   <h1>Confirm sign-in</h1>
   <p class="text-secondary auth-lead">

@@ -22,6 +22,9 @@ function authPage(
 
 export const routes: Routes = [
   authPage('login', 'Sign in', () => import('./features/auth/login.page'), [guestGuard]),
+  authPage('register', 'Create organization', () => import('./features/auth/register.page'), [
+    guestGuard,
+  ]),
   authPage(
     'forgot-password',
     'Forgot password',
@@ -30,6 +33,10 @@ export const routes: Routes = [
   ),
   // This path must stay as is: the backend embeds it in the email (FRONTEND_URL/reset-password?token=...).
   authPage('reset-password', 'New password', () => import('./features/auth/reset-password.page')),
+  // Same for this one (FRONTEND_URL/verify-email?token=...).
+  authPage('verify-email', 'Confirm email', () => import('./features/auth/verify-email.page'), [
+    guestGuard,
+  ]),
   {
     path: '',
     component: AppShell,
